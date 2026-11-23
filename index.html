@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>5K训练课表</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap">
+<style>
+/* Layout: month tabs, calendar overview for the month, then that month's weeks of seven day cards; colour encodes session type, like lane markings. */
+:root {
+  --bg: #f2f5f4; --surface: #ffffff; --fg: #12201f; --muted: #5b6b69; --line: #d5dedc;
+  --easy: #0f7b6c; --tempo: #b86a12; --interval: #b8344a; --long: #2b5aa6; --cross: #7a4fb0; --rest: #7a8886; --done-bg: #e3efec;
+  --font-display: "Barlow Condensed", "Arial Narrow", sans-serif;
+  --font-body: "Noto Sans SC", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1716; --surface: #172221; --fg: #e6efed; --muted: #9bafac; --line: #2a3a38;
+    --easy: #3fc2ae; --tempo: #e5a04b; --interval: #f06b82; --long: #7fa8ee; --cross: #b59af0; --rest: #8a9a98; --done-bg: #1d3330;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1716; --surface: #172221; --fg: #e6efed; --muted: #9bafac; --line: #2a3a38;
+  --easy: #3fc2ae; --tempo: #e5a04b; --interval: #f06b82; --long: #7fa8ee; --cross: #b59af0; --rest: #8a9a98; --done-bg: #1d3330;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.6;
+  padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 2000px; margin: 0 auto; display: flex; flex-direction: column; gap: 28px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 6vw, 52px); line-height: 1.05; margin: 0; letter-spacing: .01em; }
+.sub { color: var(--muted); margin: 6px 0 0; max-width: 70ch; }
+.top { display: flex; flex-direction: column; gap: 16px; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.rules { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.rule { border-top: 2px solid var(--fg); padding-top: 8px; min-width: 0; }
+.rule b { font-family: var(--font-display); font-size: 22px; font-weight: 600; display: block; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.rule small { color: var(--muted); font-size: 13px; }
+.months { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; position: sticky; top: 0; z-index: 5; background: var(--bg); padding-top: 8px; }
+.mbtn { appearance: none; font: inherit; color: var(--muted); background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-height: 44px; padding: 4px 12px; cursor: pointer; white-space: nowrap; display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.15; flex: 0 0 auto; }
+.mbtn .y { font-size: 11px; }
+.mbtn .m { font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--fg); }
+.mbtn[aria-pressed="true"] { background: var(--fg); border-color: var(--fg); }
+.mbtn[aria-pressed="true"] .y, .mbtn[aria-pressed="true"] .m { color: var(--bg); }
+.mbtn.now { box-shadow: inset 0 -3px 0 var(--easy); }
+.mbtn:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.mhead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 16px; }
+.mhead h2 { font-family: var(--font-display); font-size: 34px; font-weight: 700; margin: 0; }
+.mhead p { margin: 0; color: var(--muted); font-size: 14px; }
+.cal { display: flex; flex-direction: column; gap: 6px; }
+.cal-head, .cal-row { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.cal-head span { font-size: 12px; color: var(--muted); text-align: center; letter-spacing: .08em; }
+.cal-cell { appearance: none; font: inherit; color: inherit; text-align: left; cursor: pointer; background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--c, var(--rest)); border-radius: 6px; padding: 6px; min-height: 84px; display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cal-cell.other { opacity: .45; }
+.cal-cell:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+.cal-cell.today { outline: 2px solid var(--fg); outline-offset: 1px; }
+.cal-cell.done { background: var(--done-bg); }
+.cal-cell .n { font-family: var(--font-display); font-size: 20px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.cal-cell .k { font-size: 11.5px; font-weight: 700; color: var(--c, var(--rest)); line-height: 1.2; }
+.cal-cell .t { display: none; font-size: 12px; color: var(--muted); line-height: 1.3; overflow-wrap: anywhere; }
+.cal-cell .km { margin-top: auto; font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--c, var(--rest)); line-height: 1; font-variant-numeric: tabular-nums; }
+.cal-cell .ok { font-size: 12px; color: var(--easy); font-weight: 700; }
+@media (min-width: 720px) { .cal-cell { min-height: 104px; padding: 8px; } .cal-cell .t { display: block; } }
+#weeks { display: flex; flex-direction: column; gap: 28px; }
+.week { display: flex; flex-direction: column; gap: 12px; }
+.week-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 4px 16px; border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+.week-head h2 { font-family: var(--font-display); font-size: 28px; font-weight: 600; margin: 0; }
+.week-head .km { font-family: var(--font-display); font-size: 20px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.days { display: grid; grid-template-columns: 1fr; gap: 10px; }
+@media (min-width: 1100px) { .days { grid-template-columns: repeat(7, minmax(0, 1fr)); } }
+.day { background: var(--surface); border: 1px solid var(--line); border-top: 4px solid var(--c, var(--rest)); border-radius: 6px; padding: 12px; display: flex; flex-direction: column; gap: 8px; min-width: 0; scroll-margin-top: 80px; }
+.day.today { outline: 2px solid var(--fg); outline-offset: 2px; }
+.day.done { background: var(--done-bg); }
+.d-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.d-date { font-family: var(--font-display); font-size: 24px; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; }
+.d-date em { font-style: normal; font-size: 14px; color: var(--muted); font-family: var(--font-body); margin-left: 6px; }
+.tag { font-size: 12px; font-weight: 700; color: var(--c, var(--rest)); letter-spacing: .06em; white-space: nowrap; }
+.d-title { font-weight: 700; margin: 0; line-height: 1.35; font-size: 15px; }
+.d-dist { font-family: var(--font-display); font-size: 30px; font-weight: 600; line-height: 1; color: var(--c, var(--rest)); font-variant-numeric: tabular-nums; }
+.d-dist small { font-size: 15px; font-weight: 500; margin-left: 2px; }
+.d-body { margin: 0; padding: 0; list-style: none; font-size: 13.5px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.d-body li { overflow-wrap: anywhere; }
+.d-body b { color: var(--fg); font-weight: 500; font-variant-numeric: tabular-nums; }
+.d-sec { border-radius: 6px; padding: 8px 10px; display: flex; flex-direction: column; gap: 4px; }
+.d-sec .lab { font-size: 12px; font-weight: 700; letter-spacing: .06em; }
+.plan { border: 1px dashed color-mix(in srgb, var(--c, var(--rest)) 45%, var(--line)); background: var(--surface); }
+.plan .lab { color: var(--c, var(--rest)); }
+.act { background: color-mix(in srgb, var(--easy) 18%, var(--surface)); border: 1.5px solid var(--easy); }
+.act .lab { color: var(--easy); font-size: 13.5px; }
+.act .d-body { color: var(--fg); }
+.act .d-body b { font-weight: 700; }
+.act.miss { background: color-mix(in srgb, var(--interval) 10%, var(--surface)); border: 1.5px solid var(--interval); }
+.act.miss .lab { color: var(--interval); }
+.score { display: flex; align-items: baseline; gap: 4px 8px; flex-wrap: wrap; border-radius: 6px; padding: 6px 10px; color: var(--sc); background: color-mix(in srgb, var(--sc) 12%, var(--surface)); }
+.score b { font-family: var(--font-display); font-size: 30px; font-weight: 700; line-height: 1; }
+.score small { font-size: 13px; font-weight: 600; }
+.score span { flex-basis: 100%; font-size: 13px; color: var(--fg); line-height: 1.45; }
+.score.shi { --sc: var(--easy); } .score.smid { --sc: var(--tempo); } .score.slo { --sc: var(--interval); }
+.cal-cell .sc { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--fg); line-height: 1; }
+.cal-cell .no { font-size: 12px; color: var(--interval); font-weight: 700; }
+.check { margin-top: auto; padding-top: 6px; display: flex; align-items: center; gap: 8px; font-size: 13px; cursor: pointer; user-select: none; }
+.check input { width: 18px; height: 18px; accent-color: var(--easy); }
+.notes { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; border-top: 1px solid var(--line); padding-top: 20px; }
+.notes h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 0 0 6px; }
+.notes p, .notes ul { margin: 0; font-size: 14px; color: var(--muted); }
+.notes ul { padding-left: 18px; display: flex; flex-direction: column; gap: 4px; }
+.progress { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+@media (prefers-reduced-motion: no-preference) { .day { transition: background-color .2s; } }
+.year { display: flex; flex-direction: column; gap: 16px; border-top: 1px solid var(--line); padding-top: 20px; }
+.year h2 { font-family: var(--font-display); font-size: 32px; font-weight: 700; margin: 0; }
+.year h3 { font-family: var(--font-display); font-size: 22px; font-weight: 600; margin: 8px 0 0; }
+.year p { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+.tbl-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.tbl { border-collapse: collapse; width: 100%; min-width: 760px; font-size: 13.5px; }
+.tbl th, .tbl td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+.tbl th { font-size: 12px; color: var(--muted); font-weight: 700; letter-spacing: .04em; background: var(--bg); }
+.tbl td.num, .tbl td:first-child { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tbl tr:last-child td { border-bottom: 0; }
+.tbl .ph { font-weight: 700; border-left: 4px solid var(--c, var(--rest)); }
+.tbl .goal { color: var(--fg); font-weight: 600; }
+.year ul { margin: 0; padding-left: 18px; font-size: 14px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; }
+.err { color: var(--interval); }
+.main { display: flex; flex-direction: column; gap: 28px; }
+.side { display: flex; flex-direction: column; gap: 16px; }
+@media (min-width: 1100px) { .wrap .rules { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (min-width: 1700px) {
+  .main { display: grid; grid-template-columns: 440px minmax(0, 1fr); gap: 32px; align-items: start; }
+  .side { position: sticky; top: 72px; max-height: calc(100vh - 88px); overflow-y: auto; }
+  .side .cal-cell { min-height: 72px; padding: 6px; }
+  .side .cal-cell .t { display: none; }
+  .day { scroll-margin-top: 90px; }
+  .notes { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+}
+@media (min-width: 2200px) { .main { grid-template-columns: 520px minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>5K训练课表</h1>
+      <p class="sub">2026年9月28日至2027年11月28日,只练5K。11月8日之前是Strava上的实际记录。每个月20到27号之间测一次5K:2月改成2/14的比赛,11/20(周六)是全年目标赛。每周跑量从12月的40公里,1月到44,夏天到55封顶。12/21以后的配速是按预测成绩推算的,每次测试后按实际成绩更新下一个月。</p>
+    </div>
+    <div class="legend" aria-label="图例">
+      <span><i class="dot" style="background:var(--easy)"></i>轻松跑</span>
+      <span><i class="dot" style="background:var(--tempo)"></i>节奏跑</span>
+      <span><i class="dot" style="background:var(--interval)"></i>间歇跑 / 测试</span>
+      <span><i class="dot" style="background:var(--long)"></i>长距离</span>
+      <span><i class="dot" style="background:var(--cross)"></i>交叉训练</span>
+      <span><i class="dot" style="background:var(--rest)"></i>休息</span>
+      <span class="progress" id="progress"></span>
+    </div>
+    <div class="rules">
+      <div class="rule"><b>≤ 150 次/分</b><small>轻松跑心率上限。配速会随成绩变快,以心率为准。</small></div>
+      <div class="rule"><b>165–172 次/分</b><small>节奏跑心率,不要超过175。间歇最后几组到175–185是正常的。</small></div>
+      <div class="rule"><b>135–150 次/分</b><small>椭圆机或单车的目标心率,阻力要加到心率真的到位。</small></div>
+      <div class="rule"><b>2 次 / 周</b><small>力量训练:分腿蹲、单腿硬拉、单腿臀桥、直腿和屈膝提踵、侧平板。</small></div>
+    </div>
+  </header>
+
+  <nav class="months" id="months" aria-label="选择月份"></nav>
+
+  <div class="main">
+    <aside class="side">
+      <div class="mhead"><h2 id="mtitle"></h2><p id="msum"></p></div>
+      <section class="cal" aria-label="本月日历">
+        <div class="cal-head"><span>一</span><span>二</span><span>三</span><span>四</span><span>五</span><span>六</span><span>日</span></div>
+        <div id="calrows" class="cal"></div>
+      </section>
+    </aside>
+    <div id="weeks"><p class="sub">正在加载课表…</p></div>
+  </div>
+
+  <section class="notes">
+    <div>
+      <h3>膝盖和小腿优先</h3>
+      <p>跑步中或跑后出现持续不适(休息后仍疼,或第二天更重),或者又出现躺着时的钝痛,当天改椭圆机或休息,不要硬跑。强度课前一天有感觉,就推迟一天。膝盖后侧偏内酸痛期间,每天做臀桥静止保持30–45秒×4–5次和坐姿脚跟压地×5次,休息日也做;尽量在跑道或平路跑,避开下坡。</p>
+    </div>
+    <div>
+      <h3>强度课怎么判断</h3>
+      <ul>
+        <li>最后一组和第一组用时差距不超过3秒。</li>
+        <li>体感是费力但可控,能说短句。</li>
+        <li>跑完觉得还能再来一组,下次配速可快2–3秒。</li>
+        <li>连续两次跑不到配速下限,先别加量,告诉我再调。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>每周底线</h3>
+      <ul>
+        <li>至少1天完全休息。</li>
+        <li>计划外的冲刺、计时跑、和朋友跑快,都算一次强度课,当周要相应去掉一次。</li>
+        <li>两次质量课之间至少隔两天。</li>
+        <li>节假日或出差打乱时,先保两次质量课和长跑,轻松跑可以少。</li>
+        <li>睡够7–8小时,吃够,别为了减重少吃。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>每天的评分(10分制)</h3>
+      <ul>
+        <li>完成度4分:项目做了,距离或时长在计划的±15%以内。</li>
+        <li>强度4分:配速和心率落在计划范围;轻松日不超心率,间歇组间稳定。</li>
+        <li>细节2分:加速跑、力量、热身放松做了,没有计划外的强度或额外训练。</li>
+        <li>休息日:完全休息10分,轻松散步或慢骑7–8分,额外强度5分以下。</li>
+        <li>计划的训练完全没做:0–2分。</li>
+      </ul>
+    </div>
+    <div>
+      <h3>每月测试之后</h3>
+      <p>测完把成绩发给我。快于或慢于预测30秒以上,我会重排下一个月的配速和跑量;差得不多,就按下面的配速表微调。11/20跑出<b>26:19</b>,下次是12/18。</p>
+    </div>
+  </section>
+
+  <section class="year" aria-label="全年概览">
+    <h2>全年概览 · 只练5K</h2>
+    <p>每个月一个周期:三周训练(部分月份加一周减量),最后一周测试。每周两次质量课:周二最大摄氧量间歇(1000、800、1200、1600米轮换),周五阈值跑(巡航间歇、连续节奏跑、2×3公里轮换),测试前一周的周五换成目标配速1600米。周六长跑最后2到4公里稳定跑。预测成绩只是估计,范围很宽是正常的。</p>
+    <div class="tbl-wrap">
+      <table class="tbl">
+        <thead><tr><th>月份</th><th>每周跑量</th><th>这个月的重点</th><th>测试 / 比赛</th><th>预测</th></tr></thead>
+        <tbody>
+          <tr><td>11月</td><td class="num">31→38</td><td class="ph" style="--c: var(--easy)">从1次质量课加到2次</td><td>11/20 已测</td><td class="goal">26:19</td></tr>
+          <tr><td>12月</td><td class="num">31 减量 → 40 → 42</td><td class="ph" style="--c: var(--easy)">减量、测试,然后跑量上40</td><td>12/18(周五)</td><td>25:00–26:00,中位数约25:30</td></tr>
+          <tr><td>1月</td><td class="num">44,减量35</td><td class="ph" style="--c: var(--interval)">5K强化</td><td>1/22(周五)</td><td>24:05–25:20,中位数约24:40</td></tr>
+          <tr><td>2月</td><td class="num">44 → 40 → 比赛周 → 恢复</td><td class="ph" style="--c: var(--interval)">比赛配速专项,然后恢复两周</td><td class="goal">2/14(周日)比赛</td><td class="goal">23:20–24:40,中位数约24:00</td></tr>
+          <tr><td>3月</td><td class="num">42 → 44 → 46</td><td class="ph" style="--c: var(--tempo)">重新加量</td><td>3/26(周五)</td><td>23:05–24:20,中位数约23:40</td></tr>
+          <tr><td>4月</td><td class="num">44 → 46 → 48</td><td class="ph" style="--c: var(--tempo)">跑量稳步增加</td><td>4/23(周五)</td><td>22:45–24:00,中位数约23:20</td></tr>
+          <tr><td>5月</td><td class="num">46 → 48 → 50</td><td class="ph" style="--c: var(--tempo)">周四加坡道冲刺,周三改成跑步</td><td>5/21(周五)</td><td>22:25–23:40,中位数约23:00</td></tr>
+          <tr><td>6月</td><td class="num">48 → 50 → 52,减量42</td><td class="ph" style="--c: var(--long)">夏季有氧,注意天热</td><td>6/25(周五)</td><td>22:10–23:30,中位数约22:45</td></tr>
+          <tr><td>7月</td><td class="num">50 → 52 → 54</td><td class="ph" style="--c: var(--long)">跑量接近上限</td><td>7/23(周五)</td><td>22:00–23:20,中位数约22:35</td></tr>
+          <tr><td>8月</td><td class="num">52 → 54 → 55</td><td class="ph" style="--c: var(--long)">跑量到55封顶</td><td>8/20(周五)</td><td>21:45–23:00,中位数约22:20</td></tr>
+          <tr><td>9月</td><td class="num">52 → 55 → 55,减量44</td><td class="ph" style="--c: var(--interval)">秋季强化</td><td>9/24(周五)</td><td>21:25–22:40,中位数约22:00</td></tr>
+          <tr><td>10月</td><td class="num">50 → 52 → 54</td><td class="ph" style="--c: var(--interval)">最后一个完整训练周期</td><td>10/22(周五)</td><td>21:10–22:25,中位数约21:45</td></tr>
+          <tr><td>11月</td><td class="num">50 → 48 → 40 → 比赛周</td><td class="ph" style="--c: var(--interval)">逐步减量,保持强度</td><td class="goal">11/20(周六)目标赛</td><td class="goal">21:00–22:10,中位数约21:35</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>按最新5K成绩查配速</h3>
+    <p>每次测试后,找最接近的一行用。轻松跑以心率为准(不超过150),配速只作参考。数字是按常用跑步公式推算的约数。</p>
+    <div class="tbl-wrap">
+      <table class="tbl" style="min-width: 600px">
+        <thead><tr><th>5K成绩</th><th>5K配速</th><th>间歇(最大摄氧量)</th><th>阈值 / 节奏跑</th><th>轻松跑</th></tr></thead>
+        <tbody>
+          <tr><td>26:00</td><td class="num">5'12"</td><td class="num">5'05"</td><td class="num">5'30"</td><td class="num">6'45"–7'20"</td></tr>
+          <tr><td>25:00</td><td class="num">5'00"</td><td class="num">4'54"</td><td class="num">5'17"</td><td class="num">6'30"–7'05"</td></tr>
+          <tr><td>24:00</td><td class="num">4'48"</td><td class="num">4'42"</td><td class="num">5'05"</td><td class="num">6'15"–6'50"</td></tr>
+          <tr><td>23:00</td><td class="num">4'36"</td><td class="num">4'30"</td><td class="num">4'53"</td><td class="num">6'00"–6'35"</td></tr>
+          <tr><td>22:00</td><td class="num">4'24"</td><td class="num">4'18"</td><td class="num">4'41"</td><td class="num">5'45"–6'20"</td></tr>
+          <tr><td>21:00</td><td class="num">4'12"</td><td class="num">4'06"</td><td class="num">4'29"</td><td class="num">5'30"–6'05"</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>全年不变的规则</h3>
+    <ul>
+      <li>每周最多两次质量课,两次之间至少隔两天;其余都是轻松跑。</li>
+      <li>跑量每周增幅不超过约10%;每4到5周有一个减量周或测试周。</li>
+      <li>跑步跑量先封顶在45公里,夏季到50–55;想再加有氧,用椭圆机或单车补。</li>
+      <li>力量训练全年每周2次,测试和比赛那周减轻。</li>
+      <li>夏天天热时,同样心率配速会慢,以心率为准,不要硬追配速。</li>
+      <li>膝盖或小腿出现持续不适,当周立刻减量或换椭圆机;两周不见好转就去看物理治疗师。</li>
+      <li>生病或中断一周以内,接着按计划走;超过一周,先用一周轻松跑恢复,再回到计划。</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+{
+  var COLORS = { easy: "--easy", tempo: "--tempo", interval: "--interval", long: "--long", cross: "--cross", rest: "--rest" };
+  var KEY = "run-plan-year-done", OLD = "run-plan-nov9-done";
+  var done = {};
+  try { done = JSON.parse(localStorage.getItem(KEY) || "{}") || {}; } catch (e) { done = {}; }
+  try {
+    var old = JSON.parse(localStorage.getItem(OLD) || "{}") || {};
+    var moved = false;
+    Object.keys(old).forEach(function (k) {
+      var nk = "2026-" + k.replace("/", "-");
+      if (!(nk in done)) { done[nk] = old[k]; moved = true; }
+    });
+    if (moved) localStorage.setItem(KEY, JSON.stringify(done));
+  } catch (e) {}
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(done)); } catch (e) {} }
+
+  var now = new Date();
+  var todayKey = now.getFullYear() + "-" + (now.getMonth() + 1) + "-" + now.getDate();
+  var WEEKS = [], MONTHS = [], cur = null;
+
+  function parse(k) { var p = k.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function mkey(dt) { return dt.getFullYear() + "-" + (dt.getMonth() + 1 < 10 ? "0" : "") + (dt.getMonth() + 1); }
+  function isDone(day) { if (day.status) return false; return (day.key in done) ? !!done[day.key] : !!day.pre; }
+
+  function init(data) {
+    WEEKS = data.weeks;
+    WEEKS.forEach(function (w, i) {
+      w.n = i + 1;
+      w.mk = mkey(parse(w.days[3].key));
+      if (MONTHS.indexOf(w.mk) < 0) MONTHS.push(w.mk);
+    });
+    var nav = document.getElementById("months");
+    var nowMk = null;
+    WEEKS.forEach(function (w) { w.days.forEach(function (d) { if (d.key === todayKey) nowMk = w.mk; }); });
+    MONTHS.forEach(function (mk) {
+      var b = document.createElement("button");
+      b.type = "button"; b.className = "mbtn" + (mk === nowMk ? " now" : ""); b.dataset.mk = mk;
+      var p = mk.split("-");
+      b.innerHTML = '<span class="y">' + p[0] + '</span><span class="m">' + (+p[1]) + '月</span>';
+      b.addEventListener("click", function () { location.hash = "m" + mk; });
+      nav.appendChild(b);
+    });
+    window.addEventListener("hashchange", fromHash);
+    fromHash(true, nowMk);
+  }
+
+  function fromHash(first, nowMk) {
+    var h = location.hash.replace("#m", "");
+    var mk = MONTHS.indexOf(h) >= 0 ? h : (nowMk || (parse(todayKey) < parse(WEEKS[0].days[0].key) ? MONTHS[0] : MONTHS[MONTHS.length - 1]));
+    cur = mk; render();
+    if (first === true && mk === nowMk) {
+      var t = document.getElementById("day-" + todayKey);
+      if (t) setTimeout(function () { t.scrollIntoView({ block: "center" }); }, 50);
+    }
+  }
+
+  function list(a) { return '<ul class="d-body">' + (a || []).map(function (i) { return "<li>" + i + "</li>"; }).join("") + '</ul>'; }
+  function card(day) {
+    var dn = isDone(day);
+    var el = document.createElement("article");
+    el.className = "day" + (dn ? " done" : "") + (day.key === todayKey ? " today" : "");
+    el.id = "day-" + day.key;
+    el.style.setProperty("--c", "var(" + COLORS[day.t] + ")");
+    el.innerHTML =
+      '<div class="d-head"><span class="d-date">' + day.d + '<em>' + day.w + '</em></span><span class="tag">' + day.tag + '</span></div>' +
+      (day.score != null ? '<div class="score s' + (day.score >= 8 ? 'hi' : day.score >= 5 ? 'mid' : 'lo') + '"><b>' + day.score + '</b><small>/10</small><span>' + (day.scoreNote || '') + '</span></div>' : '') +
+      '<h3 class="d-title">' + day.title + '</h3>' +
+      (day.km ? '<div class="d-dist">' + day.km + '<small>公里</small></div>' : '') +
+      '<div class="d-sec plan"><span class="lab">计划</span>' + list(day.plan) + '</div>' +
+      (day.status === "skip" ? '<div class="d-sec act miss"><span class="lab">✗ 没按计划完成</span>' + list(day.actual) + '</div>' :
+       day.status === "none" ? '<div class="d-sec act miss"><span class="lab">没有训练记录</span></div>' :
+       day.actual ? '<div class="d-sec act"><span class="lab">✓ 实际完成</span>' + list(day.actual) + '</div>'
+        : (dn ? '<div class="d-sec act"><span class="lab">✓ 已完成</span></div>' : '')) +
+      (day.status ? '' : '<label class="check"><input type="checkbox" ' + (dn ? "checked" : "") + '>已完成</label>');
+    var cb = el.querySelector("input");
+    if (cb) cb.addEventListener("change", function (e) {
+      done[day.key] = e.target.checked; save(); render();
+    });
+    return el;
+  }
+
+  function cell(day, other) {
+    var dn = isDone(day);
+    var c = document.createElement("button");
+    c.type = "button";
+    c.className = "cal-cell" + (dn ? " done" : "") + (day.key === todayKey ? " today" : "") + (other ? " other" : "");
+    c.style.setProperty("--c", "var(" + COLORS[day.t] + ")");
+    c.setAttribute("aria-label", day.d + " " + day.w + " " + day.title);
+    c.innerHTML = '<span class="n">' + day.d.split("/")[1] + '</span>' +
+      '<span class="k">' + day.tag + (dn ? ' <span class="ok">✓</span>' : (day.status === "skip" ? ' <span class="no">✗</span>' : '')) + '</span>' +
+      '<span class="t">' + day.title + '</span>' +
+      (day.km ? '<span class="km">' + day.km + 'k</span>' : '') +
+      (day.score != null ? '<span class="sc">' + day.score + '分</span>' : '');
+    c.addEventListener("click", function () {
+      var t = document.getElementById("day-" + day.key);
+      if (t) t.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    return c;
+  }
+
+  function render() {
+    var total = 0, count = 0;
+    WEEKS.forEach(function (w) { w.days.forEach(function (d) { total++; if (isDone(d)) count++; }); });
+    document.getElementById("progress").textContent = "已完成 " + count + " / " + total + " 天";
+    document.querySelectorAll(".mbtn").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.mk === cur ? "true" : "false"); });
+    var active = document.querySelector('.mbtn[aria-pressed="true"]');
+    if (active && active.scrollIntoView) active.scrollIntoView({ block: "nearest", inline: "center" });
+
+    var p = cur.split("-"), month = +p[1];
+    var ws = WEEKS.filter(function (w) { return w.mk === cur; });
+    var km = 0; ws.forEach(function (w) { km += w.km; });
+    document.getElementById("mtitle").textContent = p[0] + "年" + month + "月";
+    var tests = [];
+    ws.forEach(function (w) { w.days.forEach(function (d) { if (d.tag.indexOf("5K") === 0) tests.push(d.d + " " + d.tag); }); });
+    document.getElementById("msum").textContent = ws.length + " 周 · 跑步约 " + Math.round(km) + " 公里" + (tests.length ? " · " + tests.join("、") : "");
+
+    var rows = document.getElementById("calrows"); rows.innerHTML = "";
+    var box = document.getElementById("weeks"); box.innerHTML = "";
+    ws.forEach(function (w) {
+      var r = document.createElement("div"); r.className = "cal-row";
+      w.days.forEach(function (d) { r.appendChild(cell(d, parse(d.key).getMonth() + 1 !== month)); });
+      rows.appendChild(r);
+
+      var sec = document.createElement("section"); sec.className = "week";
+      var first = w.days[0].d, last = w.days[6].d;
+      sec.innerHTML = '<div class="week-head"><h2>第' + w.n + '周 · ' + first + ' – ' + last + '</h2><span class="km">跑步约 ' + w.km + ' 公里' + (w.note ? ' · ' + w.note : '') + '</span></div>';
+      var days = document.createElement("div"); days.className = "days";
+      w.days.forEach(function (d) { days.appendChild(card(d)); });
+      sec.appendChild(days); box.appendChild(sec);
+    });
+  }
+
+  fetch("plan.json").then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }).then(init).catch(function () {
+    document.getElementById("weeks").innerHTML = '<p class="err">课表数据没加载出来,刷新一下试试。</p>';
+  });
+}
+</script>
+</body>
+</html>
