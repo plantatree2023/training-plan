@@ -223,26 +223,26 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 
 
   <section class="year" aria-label="全年概览">
     <h2>全年概览 · 只练5K</h2>
-    <p>每个月一个周期:三周训练(部分月份加一周减量),最后一周测试。每周两次质量课:周二最大摄氧量间歇(1000、800、1200、1600米轮换),周五阈值跑(巡航间歇、连续节奏跑、2×3公里轮换),测试前一周的周五换成目标配速1600米。周六长跑最后2到4公里稳定跑。预测成绩只是估计,范围很宽是正常的。</p>
+    <p>每周跑量按页面上的月份分组(一周算在它的周四所在的月份),已过去的周是实际跑量,之后的是计划跑量。每个月一个周期:三周训练(部分月份加一周减量),最后一周测试。每周两次质量课:周二最大摄氧量间歇(1000、800、1200、1600米轮换),周五阈值跑(巡航间歇、连续节奏跑、2×3公里轮换),测试前一周的周五换成目标配速1600米。周六长跑最后2到4公里稳定跑。预测成绩只是估计,范围很宽是正常的。</p>
     <div class="tbl-wrap">
       <table class="tbl">
         <thead><tr><th>月份</th><th>每周跑量</th><th>这个月的重点</th><th>测试 / 比赛</th><th>预测</th></tr></thead>
         <tbody>
-          <tr><td>2026年9月</td><td class="num">6 → 17 → 20</td><td class="ph" style="--c: var(--easy)">重新开始跑步,自己练(实际记录)</td><td>9/24 Google Global 5K</td><td class="goal">29:35(5.07公里,移动时间)</td></tr>
-          <tr><td>10月</td><td class="num">18.5 → 11 → 19 → 25 → 27.5</td><td class="ph" style="--c: var(--easy)">恢复跑步习惯,开始加间歇(实际记录)</td><td>10/22 5K测试</td><td class="goal">27:50</td></tr>
-          <tr><td>11月</td><td class="num">27 → 31 → 38</td><td class="ph" style="--c: var(--easy)">从1次质量课加到2次</td><td>11/20 已测</td><td class="goal">26:19</td></tr>
-          <tr><td>12月</td><td class="num">31 减量 → 40 → 42</td><td class="ph" style="--c: var(--easy)">减量、测试,然后跑量上40</td><td>12/18(周五)</td><td>25:00–26:00,中位数约25:30</td></tr>
-          <tr><td>2027年1月</td><td class="num">44,减量35</td><td class="ph" style="--c: var(--interval)">5K强化</td><td>1/22(周五)</td><td>24:05–25:20,中位数约24:40</td></tr>
-          <tr><td>2月</td><td class="num">44 → 40 → 比赛周 → 恢复</td><td class="ph" style="--c: var(--interval)">比赛配速专项,然后恢复两周</td><td class="goal">2/14(周日)比赛</td><td class="goal">23:20–24:40,中位数约24:00</td></tr>
-          <tr><td>3月</td><td class="num">42 → 44 → 46</td><td class="ph" style="--c: var(--tempo)">重新加量</td><td>3/26(周五)</td><td>23:05–24:20,中位数约23:40</td></tr>
-          <tr><td>4月</td><td class="num">44 → 46 → 48</td><td class="ph" style="--c: var(--tempo)">跑量稳步增加</td><td>4/23(周五)</td><td>22:45–24:00,中位数约23:20</td></tr>
-          <tr><td>5月</td><td class="num">46 → 48 → 50</td><td class="ph" style="--c: var(--tempo)">周四加坡道冲刺,周三改成跑步</td><td>5/21(周五)</td><td>22:25–23:40,中位数约23:00</td></tr>
-          <tr><td>6月</td><td class="num">48 → 50 → 52,减量42</td><td class="ph" style="--c: var(--long)">夏季有氧,注意天热</td><td>6/25(周五)</td><td>22:10–23:30,中位数约22:45</td></tr>
-          <tr><td>7月</td><td class="num">50 → 52 → 54</td><td class="ph" style="--c: var(--long)">跑量接近上限</td><td>7/23(周五)</td><td>22:00–23:20,中位数约22:35</td></tr>
-          <tr><td>8月</td><td class="num">52 → 54 → 55</td><td class="ph" style="--c: var(--long)">跑量到55封顶</td><td>8/20(周五)</td><td>21:45–23:00,中位数约22:20</td></tr>
-          <tr><td>2026年9月</td><td class="num">52 → 55 → 55,减量44</td><td class="ph" style="--c: var(--interval)">秋季强化</td><td>9/24(周五)</td><td>21:25–22:40,中位数约22:00</td></tr>
-          <tr><td>10月</td><td class="num">50 → 52 → 54</td><td class="ph" style="--c: var(--interval)">最后一个完整训练周期</td><td>10/22(周五)</td><td>21:10–22:25,中位数约21:45</td></tr>
-          <tr><td>2027年11月</td><td class="num">50 → 48 → 40 → 比赛周</td><td class="ph" style="--c: var(--interval)">逐步减量,保持强度</td><td class="goal">11/20(周六)目标赛</td><td class="goal">21:00–22:10,中位数约21:35</td></tr>
+          <tr data-mk="2026-09"><td>2026年9月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">重新开始跑步,自己练(实际记录)</td><td>9/24 Google Global 5K</td><td class="goal">29:35(5.07公里,移动时间)</td></tr>
+          <tr data-mk="2026-10"><td>10月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">恢复跑步习惯,开始加间歇(实际记录)</td><td>10/22 5K测试</td><td class="goal">27:50</td></tr>
+          <tr data-mk="2026-11"><td>11月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">从1次质量课加到2次</td><td>11/20 已测</td><td class="goal">26:19</td></tr>
+          <tr data-mk="2026-12"><td>12月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">减量、测试,然后跑量上40</td><td>12/18(周五)</td><td>25:00–26:00,中位数约25:30</td></tr>
+          <tr data-mk="2027-01"><td>2027年1月</td><td class="num wk"></td><td class="ph" style="--c: var(--interval)">5K强化</td><td>1/22(周五)</td><td>24:05–25:20,中位数约24:40</td></tr>
+          <tr data-mk="2027-02"><td>2月</td><td class="num wk"></td><td class="ph" style="--c: var(--interval)">比赛配速专项,然后恢复两周</td><td class="goal">2/14(周日)比赛</td><td class="goal">23:20–24:40,中位数约24:00</td></tr>
+          <tr data-mk="2027-03"><td>3月</td><td class="num wk"></td><td class="ph" style="--c: var(--tempo)">重新加量</td><td>3/26(周五)</td><td>23:05–24:20,中位数约23:40</td></tr>
+          <tr data-mk="2027-04"><td>4月</td><td class="num wk"></td><td class="ph" style="--c: var(--tempo)">跑量稳步增加</td><td>4/23(周五)</td><td>22:45–24:00,中位数约23:20</td></tr>
+          <tr data-mk="2027-05"><td>5月</td><td class="num wk"></td><td class="ph" style="--c: var(--tempo)">周四加坡道冲刺,周三改成跑步</td><td>5/21(周五)</td><td>22:25–23:40,中位数约23:00</td></tr>
+          <tr data-mk="2027-06"><td>6月</td><td class="num wk"></td><td class="ph" style="--c: var(--long)">夏季有氧,注意天热</td><td>6/25(周五)</td><td>22:10–23:30,中位数约22:45</td></tr>
+          <tr data-mk="2027-07"><td>7月</td><td class="num wk"></td><td class="ph" style="--c: var(--long)">跑量接近上限</td><td>7/23(周五)</td><td>22:00–23:20,中位数约22:35</td></tr>
+          <tr data-mk="2027-08"><td>8月</td><td class="num wk"></td><td class="ph" style="--c: var(--long)">跑量到55封顶</td><td>8/20(周五)</td><td>21:45–23:00,中位数约22:20</td></tr>
+          <tr data-mk="2027-09"><td>9月</td><td class="num wk"></td><td class="ph" style="--c: var(--interval)">秋季强化</td><td>9/24(周五)</td><td>21:25–22:40,中位数约22:00</td></tr>
+          <tr data-mk="2027-10"><td>10月</td><td class="num wk"></td><td class="ph" style="--c: var(--interval)">最后一个完整训练周期</td><td>10/22(周五)</td><td>21:10–22:25,中位数约21:45</td></tr>
+          <tr data-mk="2027-11"><td>2027年11月</td><td class="num wk"></td><td class="ph" style="--c: var(--interval)">逐步减量,保持强度</td><td class="goal">11/20(周六)目标赛</td><td class="goal">21:00–22:10,中位数约21:35</td></tr>
         </tbody>
       </table>
     </div>
@@ -324,6 +324,10 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 
       w.n = i + 1;
       w.mk = mkey(parse(w.days[3].key));
       if (MONTHS.indexOf(w.mk) < 0) MONTHS.push(w.mk);
+    });
+    document.querySelectorAll("tr[data-mk]").forEach(function (tr) {
+      var ks = WEEKS.filter(function (w) { return w.mk === tr.dataset.mk; }).map(function (w) { return w.km; });
+      tr.querySelector(".wk").textContent = ks.join(" → ");
     });
     var nav = document.getElementById("months");
     var nowMk = null;
