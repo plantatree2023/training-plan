@@ -234,7 +234,7 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 
         <tbody>
           <tr data-mk="2026-09"><td>2026年9月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">重新开始跑步,自己练(实际记录)</td><td>9/24 Google Global 5K</td><td class="pred">当时还没有预测</td><td class="res"></td><td class="dmed"></td><td class="dprev"></td></tr>
           <tr data-mk="2026-10"><td>10月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">恢复跑步习惯,开始加间歇(实际记录)</td><td>10/22 5K测试</td><td class="pred">当时的预测没有保存下来</td><td class="res"></td><td class="dmed"></td><td class="dprev"></td></tr>
-          <tr data-mk="2026-11"><td>11月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">从1次质量课加到2次</td><td>11/20 5K测试</td><td class="pred" data-lo="26:30" data-hi="27:45" data-med="27:08">26:30–27:45,中位数约27:08<small>当时只给了区间,中位数取区间中点</small></td><td class="res"></td><td class="dmed"></td><td class="dprev"></td></tr>
+          <tr data-mk="2026-11"><td>11月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">从1次质量课加到2次</td><td>11/20 5K测试</td><td class="pred" data-lo="26:30" data-hi="27:45" data-med="27:08">26:30–27:45,中位数约27:08</td><td class="res"></td><td class="dmed"></td><td class="dprev"></td></tr>
           <tr data-mk="2026-12"><td>12月</td><td class="num wk"></td><td class="ph" style="--c: var(--easy)">减量、测试,然后跑量上40</td><td>12/18(周五)</td><td class="pred" data-lo="25:00" data-hi="26:00" data-med="25:30">25:00–26:00,中位数约25:30</td><td class="res"></td><td class="dmed"></td><td class="dprev"></td></tr>
           <tr data-mk="2027-01"><td>2027年1月</td><td class="num wk"></td><td class="ph" style="--c: var(--interval)">5K强化</td><td>1/22(周五)</td><td class="pred" data-lo="24:05" data-hi="25:20" data-med="24:40">24:05–25:20,中位数约24:40</td><td class="res"></td><td class="dmed"></td><td class="dprev"></td></tr>
           <tr data-mk="2027-02"><td>2月</td><td class="num wk"></td><td class="ph" style="--c: var(--interval)">比赛配速专项,然后恢复两周</td><td class="goal">2/14(周日)比赛</td><td class="pred" data-lo="23:20" data-hi="24:40" data-med="24:00">23:20–24:40,中位数约24:00</td><td class="res"></td><td class="dmed"></td><td class="dprev"></td></tr>
@@ -357,7 +357,7 @@ h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(34px, 
         var lo = sec(pred.dataset.lo), hi = sec(pred.dataset.hi);
         note = v < lo ? "快于预测区间" : v > hi ? "慢于预测区间" : "在预测区间内";
       }
-      tr.querySelector(".res").innerHTML = '<b>' + t + '</b>' + (note ? '<small>' + note + '</small>' : '');
+      tr.querySelector(".res").innerHTML = '<b>' + t + '</b>';
       tr.querySelector(".dmed").innerHTML = pred.dataset.med ? diff(v, sec(pred.dataset.med)) : '—';
       tr.querySelector(".dprev").innerHTML = prev ? diff(v, prev.v) + '<small>上次 ' + prev.t + '</small>' : '—';
       prev = { v: v, t: t };
